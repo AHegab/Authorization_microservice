@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -74,6 +74,27 @@ export class AuthService {
     };
   }
 
+  
+
+  async findById(id: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
+  
+
+  async findAll(): Promise<User[]> {
+    return this.userRepository.find();
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
+  
+
+
+///////// SECURITY //////////
+
   generateJwt(user: User) {
     const payload = { email: user.email, sub: user.id };
     return this.jwtService.sign(payload); // Use the injected JwtService to sign the token
@@ -87,9 +108,6 @@ export class AuthService {
     }
   }
 
-  async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
-  }
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { email } });
@@ -99,26 +117,41 @@ export class AuthService {
     return null;
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
-  }
-
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
-  }
-
   async enable2FA(email: string): Promise<string> {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new BadRequestException('User not found');
     }
-
-    const secret = speakeasy.generateSecret();
+  
+    const secret = speakeasy.generateSecret({ name: `YourAppName (${email})` });
     user.twoFactorSecret = secret.base32;
     user.isTwoFactorEnabled = true;
     await this.userRepository.save(user);
-
+  
     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
     return qrCodeUrl;
   }
+  
+  async verify2FA(token: string, otp: string): Promise<boolean> {
+    try {
+      const payload = this.jwtService.verify(token);
+      const user = await this.userRepository.findOne({ where: { id: payload.sub } });
+      if (!user || !user.twoFactorSecret) {
+        throw new UnauthorizedException('2FA is not enabled');
+      }
+  
+      const isValid = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token: otp,
+      });
+  
+      console.log({ secret: user.twoFactorSecret, otp, isValid });
+      return isValid;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid OTP or token');
+    }
+  }
+  
+
 }
