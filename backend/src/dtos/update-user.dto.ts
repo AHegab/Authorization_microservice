@@ -23,10 +23,14 @@ export class UpdateUserDto {
   lastName?: string;
 
   @IsOptional()
-  @Matches(/^\d{10}$/) // Validates phone number format
+  @Matches(/^\d{11}$/) // Validates phone number format
   phoneNumber?: string;
 
   @IsOptional()
   @IsString()
   profilePicture?: string;
+
+  @IsOptional()
+  cards?: { cardNumber: string; cardType: "CreditCard" | "DebitCard"; expiryDate: string; amount: number; }[];
+
 }

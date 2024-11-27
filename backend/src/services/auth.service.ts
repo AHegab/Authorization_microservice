@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { calculatePasswordEntropy } from '../utils/password.utils';
+import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -6,14 +8,23 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { RabbitMQService } from './rabbitmq.service';
+
+
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly jwtService: JwtService, // Inject JwtService here
-  ) {}
+    private readonly jwtService: JwtService,
+    private readonly rabbitMQService: RabbitMQService,
+  ) { }
+
+
+
+
 
   async register(
     email: string,
@@ -28,6 +39,10 @@ export class AuthService {
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');
+    }
+
+    if (calculatePasswordEntropy(plainPassword) < 50) {
+      throw new BadRequestException('Password is weak');
     }
 
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
@@ -45,8 +60,25 @@ export class AuthService {
       twoFactorSecret: null,
     });
 
-    return await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Emit a message to RabbitMQ
+    await this.rabbitMQService.sendMessageToTransactions({
+      userId: savedUser.id,
+      action: 'USER_CREATED',
+      userData: {
+        email: savedUser.email,
+        firstName: savedUser.firstName,
+        lastName: savedUser.lastName,
+      },
+    });
+
+    return savedUser;
   }
+
+
+
+
 
   async login(email: string, plainPassword: string) {
     const user = await this.userRepository.findOne({ where: { email } });
@@ -74,40 +106,19 @@ export class AuthService {
     };
   }
 
-  
-
-  async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
-  }
-
-  
-
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
-  }
-
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { email } });
-  }
-
-  
 
 
-///////// SECURITY //////////
+
+
+
+
+
+  ///////// SECURITY //////////
 
   generateJwt(user: User) {
     const payload = { email: user.email, sub: user.id };
     return this.jwtService.sign(payload); // Use the injected JwtService to sign the token
   }
-
-  async validateToken(token: string): Promise<any> {
-    try {
-      return this.jwtService.verify(token); // Validate token with JwtService
-    } catch (error) {
-      throw new BadRequestException('Invalid token');
-    }
-  }
-
 
   async validateUser(email: string, password: string): Promise<User | null> {
     const user = await this.userRepository.findOne({ where: { email } });
@@ -117,41 +128,11 @@ export class AuthService {
     return null;
   }
 
-  async enable2FA(email: string): Promise<string> {
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-  
-    const secret = speakeasy.generateSecret({ name: `YourAppName (${email})` });
-    user.twoFactorSecret = secret.base32;
-    user.isTwoFactorEnabled = true;
-    await this.userRepository.save(user);
-  
-    const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
-    return qrCodeUrl;
-  }
-  
-  async verify2FA(token: string, otp: string): Promise<boolean> {
-    try {
-      const payload = this.jwtService.verify(token);
-      const user = await this.userRepository.findOne({ where: { id: payload.sub } });
-      if (!user || !user.twoFactorSecret) {
-        throw new UnauthorizedException('2FA is not enabled');
-      }
-  
-      const isValid = speakeasy.totp.verify({
-        secret: user.twoFactorSecret,
-        encoding: 'base32',
-        token: otp,
-      });
-  
-      console.log({ secret: user.twoFactorSecret, otp, isValid });
-      return isValid;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid OTP or token');
-    }
-  }
-  
+
+
+
+
+
+
 
 }

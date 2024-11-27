@@ -7,12 +7,14 @@ import * as RedisStore from 'connect-redis';
 import { createClient } from 'redis';
 
 
+
+
+
 async function bootstrap() {
 
     dotenv.config();
     
 
-    //create the jwt secret key
     
 
 

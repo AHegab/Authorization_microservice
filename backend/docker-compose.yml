@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgres://avnadmin:AVNS_zB6wwRC6-H4XkEiB4w8@auth-service-auth-service-personalfianancetracker.j.aivencloud.com:20615/defaultdb?sslmode=require"
+      RABBITMQ_URL: "amqp://user:password@rabbitmq"
+      DB_HOST: "auth-service-auth-service-personalfianancetracker.j.aivencloud.com"
+      DB_PORT: "20615"
+      DB_USER: "avnadmin"
+      DB_PASSWORD: "AVNS_zB6wwRC6-H4XkEiB4w8"
+      DB_NAME: "users"
+    depends_on:
+      - db
+      - rabbitmq
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: "avnadmin"
+      POSTGRES_PASSWORD: "AVNS_zB6wwRC6-H4XkEiB4w8"
+      POSTGRES_DB: "users"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  rabbitmq:
+    image: rabbitmq:management
+    environment:
+      RABBITMQ_DEFAULT_USER: "user"
+      RABBITMQ_DEFAULT_PASS: "password"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  postgres_data:
