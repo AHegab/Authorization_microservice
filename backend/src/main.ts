@@ -5,7 +5,7 @@ import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session';
 import * as RedisStore from 'connect-redis';
 import { createClient } from 'redis';
-
+ // Load environment variables from .env file
 
 
 
@@ -20,32 +20,21 @@ async function bootstrap() {
 
     const app = await NestFactory.create(AppModule);
 
-    app.use(cookieParser());
-
+    // Add session middleware
     app.use(
         session({
-            
-            secret: process.env.SESSION_SECRET,
-            resave: false,
-            saveUninitialized: false,
+            secret: process.env.SESSION_SECRET || 'default-secret', // Replace with your secure secret
+            resave: false, // Avoid resaving session if unmodified
+            saveUninitialized: false, // Don't save empty sessions
             cookie: {
-                maxAge: 1000 * 60 * 60, // 1 hour
-                httpOnly: true, // Helps mitigate XSS attacks
-                secure: false, // Set to true in production
+                secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+                maxAge: 1000 * 60 * 60 * 24, // 1 day
             },
         }),
     );
-    
-
-
-
-
-    
-
-
-
 
     await app.listen(3000);
-    console.log('Auth Service is running on http://localhost:3000');
+    console.log(`Auth Service is running on http://localhost:3000`);
 }
+
 bootstrap();

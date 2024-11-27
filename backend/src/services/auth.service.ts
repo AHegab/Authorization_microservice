@@ -63,15 +63,15 @@ export class AuthService {
     const savedUser = await this.userRepository.save(user);
 
     // Emit a message to RabbitMQ
-    await this.rabbitMQService.sendMessageToTransactions({
-      userId: savedUser.id,
-      action: 'USER_CREATED',
-      userData: {
-        email: savedUser.email,
-        firstName: savedUser.firstName,
-        lastName: savedUser.lastName,
-      },
-    });
+    // await this.rabbitMQService.sendMessageToTransactions({
+    //   userId: savedUser.id,
+    //   action: 'USER_CREATED',
+    //   userData: {
+    //     email: savedUser.email,
+    //     firstName: savedUser.firstName,
+    //     lastName: savedUser.lastName,
+    //   },
+    // });
 
     return savedUser;
   }

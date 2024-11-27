@@ -46,9 +46,9 @@ dotenv.config();
             username: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_DATABASE,
+            url: process.env.DATABASE_URL,
             ssl: {
-                rejectUnauthorized: false,
-                //   ca: fs.readFileSync('backend/ca-certificate.crt').toString(),
+              rejectUnauthorized: false, // Use true in production and provide the CA certificate
             },
             entities: [__dirname + '/../**/*.entity{.ts,.js}'],
             synchronize: true,

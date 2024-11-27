@@ -8,27 +8,33 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "postgres://avnadmin:AVNS_zB6wwRC6-H4XkEiB4w8@auth-service-auth-service-personalfianancetracker.j.aivencloud.com:20615/defaultdb?sslmode=require"
-      RABBITMQ_URL: "amqp://user:password@rabbitmq"
-      DB_HOST: "auth-service-auth-service-personalfianancetracker.j.aivencloud.com"
-      DB_PORT: "20615"
-      DB_USER: "avnadmin"
-      DB_PASSWORD: "AVNS_zB6wwRC6-H4XkEiB4w8"
-      DB_NAME: "users"
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_SSL_MODE=${DB_SSL_MODE}
+      - DB_URL=${DB_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - RABBITMQ_URL=${RABBITMQ_URL}
     depends_on:
       - db
       - rabbitmq
+    networks:
+      - backend-network
 
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: "avnadmin"
-      POSTGRES_PASSWORD: "AVNS_zB6wwRC6-H4XkEiB4w8"
-      POSTGRES_DB: "users"
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - backend-network
 
   rabbitmq:
     image: rabbitmq:management
@@ -38,6 +44,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - backend-network
 
 volumes:
   postgres_data:
+
+networks:
+  backend-network:
