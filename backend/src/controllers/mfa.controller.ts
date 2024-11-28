@@ -70,10 +70,13 @@ export class MFAController {
         if (!isValid) {
             throw new UnauthorizedException('Invalid OTP');
         }
-    
+        
         return { message: '2FA successful', success: true };
     }
 
+
+    
+    @UseGuards(JwtAuthGuard)
     @Post('validate-token')
     async validateToken(@Body('token') token: string) {
         if (!token) {
@@ -82,6 +85,7 @@ export class MFAController {
 
         return await this.mfaService.validateToken(token);
     }
+    
     
 
 }
