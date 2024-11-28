@@ -76,15 +76,7 @@ export class MFAController {
 
 
     
-    @UseGuards(JwtAuthGuard)
-    @Post('validateToken')
-    async validateToken(@Body('token') token: string) {
-        if (!token) {
-            throw new BadRequestException('Token is required');
-        }
-
-        return await this.mfaService.validateToken(token);
-    }
+    
     
     
 
