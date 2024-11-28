@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Enable2FADto } from '../dtos/enable-2fa.dto';
 import { MFAService } from '../services/mfa.service'; // Ensure this file exists at the specified path
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -73,5 +73,15 @@ export class MFAController {
     
         return { message: '2FA successful', success: true };
     }
+
+    @Post('validate-token')
+    async validateToken(@Body('token') token: string) {
+        if (!token) {
+            throw new BadRequestException('Token is required');
+        }
+
+        return await this.mfaService.validateToken(token);
+    }
+    
 
 }
