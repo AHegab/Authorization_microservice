@@ -1,23 +1,31 @@
-# Base image
-FROM node:16
+FROM node:20-alpine
 
-# Set working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to install dependencies
+# Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies including dev dependencies for build
 RUN npm install
 
-# Copy the rest of the application code
+# Copy source code
 COPY . .
 
 # Build the application
 RUN npm run build
 
-# Expose the application port
+# Clean up dev dependencies
+RUN npm ci --only=production
+
+# Expose port 3000
 EXPOSE 3000
 
-# Start the application
+# Set environment variables with placeholder values
+ENV DB_HOST=placeholder
+ENV DB_PORT=20615
+ENV DB_USER=placeholder
+ENV DB_PASSWORD=placeholder
+ENV DB_DATABASE=placeholder
+
+# Command to run the application
 CMD ["npm", "run", "start:prod"]
