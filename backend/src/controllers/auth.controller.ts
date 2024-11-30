@@ -89,21 +89,19 @@ export class AuthController {
     return { message: 'Logout successful' };
   }
 
-@UseGuards(JwtAuthGuard)
-@MessagePattern({ cmd: 'validate_user' })
-    @Post('validateToken')
-    async validateToken(@Body('token') token: string) {
-        if (!token) {
-            throw new BadRequestException('Token is required');
-        }
-
-        const user = await this.authService.validateToken(token);
-        if(!user){
+  @UseGuards(JwtAuthGuard)
+  @MessagePattern({ cmd: 'validate_token' }) 
+  async validateToken(@Body('token') token: string) {
+      if (!token) {
+          throw new BadRequestException('Token is required');
+      }
+  
+      const user = await this.authService.validateToken(token);
+      if (!user) {
           throw new UnauthorizedException('Invalid token');
-        }
-
-        return await user;
-    }
-
+      }
+  
+      return user; // Return the user or relevant data
+  }
 
 }

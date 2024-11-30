@@ -27,21 +27,17 @@ export class AuthService {
     phoneNumber?: string,
     profilePicture?: string,
   ): Promise<User> {
-    // Check if a user with the given email already exists
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');
     }
 
-    // Validate password strength
     if (calculatePasswordEntropy(plainPassword) < 50) {
       throw new BadRequestException('Password is weak');
     }
 
-    // Hash the user's password
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-    // Create a new user entity
     const user = this.userRepository.create({
       email,
       hashedPassword,
@@ -55,7 +51,6 @@ export class AuthService {
       twoFactorSecret: null,
     });
 
-    // Save the user to the database
     return await this.userRepository.save(user);
   }
 
@@ -63,22 +58,18 @@ export class AuthService {
    * Authenticate a user and generate a JWT.
    */
   async login(email: string, plainPassword: string) {
-    // Find the user by email
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Validate the provided password
     const isPasswordValid = await bcrypt.compare(plainPassword, user.hashedPassword);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Generate a JWT token for the authenticated user
     const token = this.generateJwt(user);
 
-    // Return user details and token
     return {
       success: true,
       message: 'Login successful',
@@ -95,30 +86,32 @@ export class AuthService {
   /**
    * Generate a JWT for the user.
    */
-   generateJwt(user: User): string {
+  generateJwt(user: User): string {
     const payload = { email: user.email, sub: user.id };
-    return this.jwtService.sign(payload); // Use the JwtService to sign the token
+    return this.jwtService.sign(payload);
   }
 
   /**
    * Validate a user for the Guard (used in strategies).
    */
   async validateUser(email: string, password: string): Promise<User | null> {
-    // Find the user by email
     const user = await this.userRepository.findOne({ where: { email } });
     if (user && (await bcrypt.compare(password, user.hashedPassword))) {
       return user;
     }
     return null;
   }
+
+  /**
+   * Validate a token.
+   */
   
   async validateToken(token: string): Promise<any> {
     try {
       const decoded = this.jwtService.verify(token);
-        return decoded; // Validate token with JwtService
+      return decoded; // Validate token with JwtService
     } catch (error) {
-        return null;
+      return null; // Return null if token is invalid
     }
-}
-
+  }
 }

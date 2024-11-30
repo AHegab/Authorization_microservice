@@ -33,13 +33,14 @@ import { Transport, MicroserviceOptions } from '@nestjs/microservices';
 
 
 async function bootstrap() {
+    dotenv.config();
   const app = await NestFactory.create(AppModule);
   
   const microservice = app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: ['amqp://uNXXla3rKflI6s8p:mLjDBJ~GppHabuq.oBxWCB11pHUJrHc8@junction.proxy.rlwy.net:34338'], // Your RabbitMQ URL
-      queue: 'auth_queue',
+        urls: [process.env.RABBITMQ_URL ], // Use environment variable
+        queue: process.env.RABBITMQ_QUEUE || 'auth_queue', // Use environment variable
       queueOptions: {
         durable: false
       },
