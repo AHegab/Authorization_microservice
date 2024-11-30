@@ -11,6 +11,7 @@ import { ResetPasswordDto } from '../dtos/password-reset.dto'; // Ensure this fi
 import { UseGuards } from '@nestjs/common';
 import { Param } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { MessagePattern } from '@nestjs/microservices';
 
 
 
@@ -89,13 +90,19 @@ export class AuthController {
   }
 
 @UseGuards(JwtAuthGuard)
+@MessagePattern({ cmd: 'validate_user' })
     @Post('validateToken')
     async validateToken(@Body('token') token: string) {
         if (!token) {
             throw new BadRequestException('Token is required');
         }
 
-        return await this.authService.validateToken(token);
+        const user = await this.authService.validateToken(token);
+        if(!user){
+          throw new UnauthorizedException('Invalid token');
+        }
+
+        return await user;
     }
 
 

@@ -111,12 +111,13 @@ export class AuthService {
     }
     return null;
   }
-
+  
   async validateToken(token: string): Promise<any> {
     try {
-        return this.jwtService.verify(token); // Validate token with JwtService
+      const decoded = this.jwtService.verify(token);
+        return decoded; // Validate token with JwtService
     } catch (error) {
-        throw new BadRequestException('Invalid token');
+        return null;
     }
 }
 

@@ -39,21 +39,6 @@ dotenv.config();
             },
         ]),
         // TypeORM configuration for database connection
-        // TypeOrmModule.forRoot({
-        //     type: 'postgres',
-        //     host: process.env.DB_HOST,
-        //     port: parseInt(process.env.DB_PORT || '5432', 10),
-        //     username: process.env.DB_USER,
-        //     password: process.env.DB_PASSWORD,
-        //     database: process.env.DB_DATABASE,
-        //     url: process.env.DATABASE_URL,
-        //     ssl: {
-        //       rejectUnauthorized: false, // Use true in production and provide the CA certificate
-        //     },
-        //     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        //     synchronize: true,
-        // }),
-
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: process.env.DB_HOST,
@@ -61,18 +46,13 @@ dotenv.config();
             username: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_DATABASE,
+            url: process.env.DATABASE_URL,
             ssl: {
-                rejectUnauthorized: false,
+              rejectUnauthorized: false, // Use true in production and provide the CA certificate
             },
-            entities: [User],
+            entities: [__dirname + '/../**/*.entity{.ts,.js}'],
             synchronize: true,
-            retryAttempts: 5,
-            retryDelay: 3000,
-            connectTimeoutMS: 10000,
-            keepConnectionAlive: true,
-            autoLoadEntities: true
         }),
-
 
         // Register the User entity with TypeORM
         TypeOrmModule.forFeature([User]),
