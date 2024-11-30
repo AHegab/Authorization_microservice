@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { MessagePattern } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,13 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
   ) {}
+
+
+  @MessagePattern('transaction_created')
+  async handleTransactionCreated(data: any) {
+    console.log('Transaction created:', data);
+    // Handle the transaction creation logic here
+  }
 
   /**
    * Register a new user.
