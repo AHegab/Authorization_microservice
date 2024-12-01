@@ -32,9 +32,9 @@ async function bootstrap() {
             },
         }),
     );
-
-    await app.listen(3000);
-    console.log(`Auth Service is running on http://localhost:3000`);
+    const PORT = 4000
+    await app.listen(PORT);
+    console.log(`Auth Service is running on ${PORT}`);
 }
 
 bootstrap();

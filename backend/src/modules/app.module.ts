@@ -16,28 +16,22 @@ import { MFAController } from '../controllers/mfa.controller';
 import { ProfileController } from '../controllers/profile.controller';
 import { PasswordController } from '../controllers/password.controller';
 import { RabbitMQService } from '../services/rabbitmq.service';
+import { ConfigModule } from '@nestjs/config';
 import * as fs from 'fs';
 
 import { ClientsModule,Transport } from '@nestjs/microservices';
+import Joi from 'joi';
+import { loadEnvFile } from 'process';
 
 dotenv.config();
 
 @Module({
     imports: [
 
-        ClientsModule.register([
-            {
-                name: 'TRANSACTIONS_SERVICE',
-                transport: Transport.RMQ,
-                options: {
-                    urls: [process.env.RABBITMQ_URL],
-                    queue: 'transaction-queue',
-                    queueOptions: {
-                        durable: false
-                    },
-                },
-            },
-        ]),
+        ConfigModule.forRoot({
+            isGlobal: true, // Make ConfigModule available globally
+            envFilePath: '.env', // Specify the path to the .env file
+          }),
         // TypeORM configuration for database connection
         TypeOrmModule.forRoot({
             type: 'postgres',
@@ -66,7 +60,6 @@ dotenv.config();
     ],
     controllers: [AuthController, MFAController, ProfileController, PasswordController], // Controller for routes
     providers: [
-        RabbitMQService,
         ProfileService,
         PasswordService,
         MFAService,
