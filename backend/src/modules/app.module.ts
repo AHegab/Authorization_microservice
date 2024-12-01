@@ -22,15 +22,18 @@ import * as fs from 'fs';
 import { ClientsModule,Transport } from '@nestjs/microservices';
 import Joi from 'joi';
 import { loadEnvFile } from 'process';
-
+import { RmqModule } from '../../libs/common/rmq/rmq.module';
+import { RabbitMQController } from '../../libs/common/rmq/rmq.controller';
 dotenv.config();
 
 @Module({
     imports: [
+        RmqModule,
 
         ConfigModule.forRoot({
             isGlobal: true, // Make ConfigModule available globally
             envFilePath: '.env', // Specify the path to the .env file
+           
           }),
         // TypeORM configuration for database connection
         TypeOrmModule.forRoot({
@@ -57,8 +60,9 @@ dotenv.config();
             secret: process.env.JWT_SECRET, // Use a secure key in production
             signOptions: { expiresIn: '1h' }, // Token expiry
         }),
+        
     ],
-    controllers: [AuthController, MFAController, ProfileController, PasswordController], // Controller for routes
+    controllers: [AuthController, MFAController, ProfileController, PasswordController, RabbitMQController], // Controller for routes
     providers: [
         ProfileService,
         PasswordService,

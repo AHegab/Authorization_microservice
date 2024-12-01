@@ -79,14 +79,27 @@ services:
       - JWT_SECRET=${JWT_SECRET}
      
     depends_on:
-      - db
+      - db2
     
     # networks:
     #   - backend-network
     volumes:
       - .:/usr/src/app
       - /usr/srcapp/node_modules
-  db:
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    # networks:
+    #   - auth-network
+    ports:
+      - "5672:5672"
+     
+    # networks:
+    #   - backend-network
+
+
+
+  db2:
     image: postgres:17
     environment:
       POSTGRES_USER: ${DB_USER}
