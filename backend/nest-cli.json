@@ -7,7 +7,7 @@
     "webpack": true
   },
   "projects": {
-    "Authorization-Microservice": {
+    "Transactions-Microservice": {
       "type": "application",
       "root": "backend",
       "entryFile": "main",
@@ -15,15 +15,7 @@
       "compilerOptions": {
         "tsConfigPath": "backend/tsconfig.app.json"
       }
-    },
-    "common": {
-      "type": "library",
-      "root": "libs/common",
-      "entryFile": "index",
-      "sourceRoot": "libs/common/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/common/tsconfig.lib.json"
-      }
     }
+    
   }
 }
