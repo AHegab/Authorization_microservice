@@ -14,7 +14,8 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   database: process.env.DB_DATABASE,
   ssl: {
     rejectUnauthorized: false,
-    ca: fs.readFileSync('backend/ca-certificate.crt').toString(),
+    // To:
+    ca: fs.readFileSync('ca-certificate.crt').toString(),
   },
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   synchronize: true,

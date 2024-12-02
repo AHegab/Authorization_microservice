@@ -7,15 +7,14 @@
     "webpack": true
   },
   "projects": {
-    "Transactions-Microservice": {
+    "Authorization-Microservice": {
       "type": "application",
-      "root": "backend",
+      "root": ".", 
       "entryFile": "main",
-      "sourceRoot": "backend/src",
+      "sourceRoot": "src", 
       "compilerOptions": {
-        "tsConfigPath": "backend/tsconfig.app.json"
+        "tsConfigPath": "tsconfig.app.json"
       }
     }
-    
   }
 }
