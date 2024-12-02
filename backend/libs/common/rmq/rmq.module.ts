@@ -1,7 +1,7 @@
+// create RMQ module
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { RmqService } from '../services/rmq.service';
-
+import { RmqService } from './rmq.service';
 
 @Module({
   imports: [ConfigModule],

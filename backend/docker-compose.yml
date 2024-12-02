@@ -1,12 +1,73 @@
-version: '3.8'
+# version: '3.8'
+
+# services:
+#   app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - DB_HOST=${DB_HOST}
+#       - DB_PORT=${DB_PORT}
+#       - DB_USER=${DB_USER}
+#       - DB_PASSWORD=${DB_PASSWORD}
+#       - DB_DATABASE=${DB_DATABASE}
+#       - DB_SSL_MODE=${DB_SSL_MODE}
+#       - DB_URL=${DB_URL}
+#       - JWT_SECRET=${JWT_SECRET}
+#       - RABBITMQ_URL=${RABBITMQ_URL}
+#     depends_on:
+#       - db
+#       - rabbitmq
+#     networks:
+#       - backend-network
+
+#   db:
+#     image: postgres:15
+#     environment:
+#       POSTGRES_USER: ${DB_USER}
+#       POSTGRES_PASSWORD: ${DB_PASSWORD}
+#       POSTGRES_DB: ${DB_DATABASE}
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     ports:
+#       - "5432:5432"
+#     networks:
+#       - backend-network
+
+#   rabbitmq:
+#     image: rabbitmq:management
+#     environment:
+#       RABBITMQ_DEFAULT_USER: "user"
+#       RABBITMQ_DEFAULT_PASS: "password"
+#     ports:
+#       - "5672:5672"
+#       - "15672:15672"
+#     networks:
+#       - backend-network
+
+# volumes:
+#   postgres_data:
+
+# networks:
+#   backend-network:
+
+
+
+
+
 
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    command: npm start
+    env_file:
+      - .env
     ports:
-      - "3000:3000"
+      - "4000:4000"
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -14,17 +75,19 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DATABASE=${DB_DATABASE}
       - DB_SSL_MODE=${DB_SSL_MODE}
-      - DB_URL=${DB_URL}
+      - DB_DATABASE_URL=${DB_DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
-      - RABBITMQ_URL=${RABBITMQ_URL}
+      - RABBITMQ_URL=amqp://host.docker.internal:5672
     depends_on:
-      - db
-      - rabbitmq
-    networks:
-      - backend-network
+      - db2
+    volumes:
+      - .:/usr/src/app
+      - /usr/srcapp/node_modules
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  db:
-    image: postgres:15
+  db2:
+    image: postgres:17
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -32,23 +95,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
-    networks:
-      - backend-network
-
-  rabbitmq:
-    image: rabbitmq:management
-    environment:
-      RABBITMQ_DEFAULT_USER: "user"
-      RABBITMQ_DEFAULT_PASS: "password"
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - backend-network
+      - "5000:5432"
 
 volumes:
   postgres_data:
+    driver: local
+  
 
-networks:
-  backend-network:
+# networks:
+#   backend-network:

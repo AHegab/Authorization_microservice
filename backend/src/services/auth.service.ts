@@ -1,22 +1,31 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { calculatePasswordEntropy } from '../utils/password.utils';
+import { Response } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
+import * as qrcode from 'qrcode';
+import * as speakeasy from 'speakeasy';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { RabbitMQService } from './rabbitmq.service';
+
+
 
 @Injectable()
-export class AuthService {
+export class  AuthService {
+  
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
-  /**
-   * Register a new user.
-   */
+
+
+
+
   async register(
     email: string,
     plainPassword: string,
@@ -27,21 +36,17 @@ export class AuthService {
     phoneNumber?: string,
     profilePicture?: string,
   ): Promise<User> {
-    // Check if a user with the given email already exists
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');
     }
 
-    // Validate password strength
     if (calculatePasswordEntropy(plainPassword) < 50) {
       throw new BadRequestException('Password is weak');
     }
 
-    // Hash the user's password
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-    // Create a new user entity
     const user = this.userRepository.create({
       email,
       hashedPassword,
@@ -55,30 +60,39 @@ export class AuthService {
       twoFactorSecret: null,
     });
 
-    // Save the user to the database
-    return await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+
+    // Emit a message to RabbitMQ
+    // await this.rabbitMQService.sendMessageToTransactions({
+    //   userId: savedUser.id,
+    //   action: 'USER_CREATED',
+    //   userData: {
+    //     email: savedUser.email,
+    //     firstName: savedUser.firstName,
+    //     lastName: savedUser.lastName,
+    //   },
+    // });
+
+    return savedUser;
   }
 
-  /**
-   * Authenticate a user and generate a JWT.
-   */
+
+
+
+
   async login(email: string, plainPassword: string) {
-    // Find the user by email
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      return { success: false, message: 'Invalid email or password' };
     }
 
-    // Validate the provided password
     const isPasswordValid = await bcrypt.compare(plainPassword, user.hashedPassword);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      return { success: false, message: 'Invalid email or password' };
     }
 
-    // Generate a JWT token for the authenticated user
     const token = this.generateJwt(user);
 
-    // Return user details and token
     return {
       success: true,
       message: 'Login successful',
@@ -88,23 +102,25 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
       },
-      token,
+      token, // Include the JWT token in the response
     };
   }
 
-  /**
-   * Generate a JWT for the user.
-   */
-   generateJwt(user: User): string {
+
+
+
+
+
+
+
+  ///////// SECURITY //////////
+
+  generateJwt(user: User) {
     const payload = { email: user.email, sub: user.id };
-    return this.jwtService.sign(payload); // Use the JwtService to sign the token
+    return this.jwtService.sign(payload); // Use the injected JwtService to sign the token
   }
 
-  /**
-   * Validate a user for the Guard (used in strategies).
-   */
   async validateUser(email: string, password: string): Promise<User | null> {
-    // Find the user by email
     const user = await this.userRepository.findOne({ where: { email } });
     if (user && (await bcrypt.compare(password, user.hashedPassword))) {
       return user;
@@ -112,12 +128,23 @@ export class AuthService {
     return null;
   }
 
-  async validateToken(token: string): Promise<any> {
+
+
+  async validateJwt(token: string) {
     try {
-        return this.jwtService.verify(token); // Validate token with JwtService
-    } catch (error) {
-        throw new BadRequestException('Invalid token');
+      this.jwtService.verify(token);
+      return true;
+    } catch (e) {
+      return false;
     }
-}
+  }
+
+
+  extractUserIdFromToken(token: string) {
+    const decoded: any = this.jwtService.decode(token);
+    return decoded.sub;
+  }
+
+
 
 }

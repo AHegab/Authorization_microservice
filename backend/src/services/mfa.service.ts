@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import * as qrcode from 'qrcode';
 import * as speakeasy from 'speakeasy';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -51,6 +51,13 @@ export class MFAService {
         return isValid;
     }
 
+    async validateToken(token: string): Promise<any> {
+        try {
+            return this.jwtService.verify(token); // Validate token with JwtService
+        } catch (error) {
+            throw new BadRequestException('Invalid token');
+        }
+    }
 
 
 
