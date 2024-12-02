@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+     
+    command:  npm run start:dev
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_SSL_MODE=${DB_SSL_MODE}
+      - DB_DATABASE_URL=${DB_DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+     
+    depends_on:
+      - db
+    
+    # networks:
+    #   - backend-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/srcapp/node_modules
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "4000:5432"
+    # networks:
+    #   - backend-network
+
+volumes:
+  postgres_data:
+    driver: local
+  
+
+# networks:
+#   backend-network:
