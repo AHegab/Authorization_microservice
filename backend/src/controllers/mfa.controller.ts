@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Enable2FADto } from '../dtos/enable-2fa.dto';
 import { MFAService } from '../services/mfa.service'; // Ensure this file exists at the specified path
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -70,8 +70,14 @@ export class MFAController {
         if (!isValid) {
             throw new UnauthorizedException('Invalid OTP');
         }
-    
+        
         return { message: '2FA successful', success: true };
     }
+
+
+    
+    
+    
+    
 
 }

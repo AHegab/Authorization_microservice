@@ -88,7 +88,15 @@ export class AuthController {
     return { message: 'Logout successful' };
   }
 
+@UseGuards(JwtAuthGuard)
+    @Post('validateToken')
+    async validateToken(@Body('token') token: string) {
+        if (!token) {
+            throw new BadRequestException('Token is required');
+        }
 
+        return await this.authService.validateToken(token);
+    }
 
 
 }

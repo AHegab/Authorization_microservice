@@ -51,13 +51,6 @@ export class MFAService {
         return isValid;
     }
 
-    async validateToken(token: string): Promise<any> {
-        try {
-            return this.jwtService.verify(token); // Validate token with JwtService
-        } catch (error) {
-            throw new BadRequestException('Invalid token');
-        }
-    }
 
 
 
