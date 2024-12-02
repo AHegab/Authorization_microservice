@@ -15,7 +15,6 @@
       "compilerOptions": {
         "tsConfigPath": "backend/tsconfig.app.json"
       }
-      
     },
     "common": {
       "type": "library",
