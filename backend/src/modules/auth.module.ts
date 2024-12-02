@@ -9,7 +9,7 @@ import { RabbitMQAuthController } from '../controllers/rabbitmq.controller';
 import { MFAService } from '../services/mfa.service';
 import { PasswordService } from '../services/password.service';
 import { ProfileService } from '../services/profile.service';
-import { MFAController } from 'src/controllers/mfa.controller';
+import { MFAController } from '../controllers/mfa.controller';
 
 @Module({
   imports: [
