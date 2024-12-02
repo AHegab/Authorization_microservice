@@ -1,76 +1,38 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import * as dotenv from 'dotenv';
-
-import { AuthController } from '../controllers/auth.controller';
 import { User } from '../entities/user.entity';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { AuthService } from '../services/auth.service';
-import { JwtStrategy } from '../strategies/jwt.strategy';
-import { ProfileService } from '../services/profile.service';
-import { PasswordService } from '../services/password.service';
-import { MFAService } from '../services/mfa.service';
-import { MFAController } from '../controllers/mfa.controller';
-import { ProfileController } from '../controllers/profile.controller';
-import { PasswordController } from '../controllers/password.controller';
-import { RabbitMQService } from '../services/rabbitmq.service';
-import { ConfigModule } from '@nestjs/config';
-import * as fs from 'fs';
 
-import { ClientsModule,Transport } from '@nestjs/microservices';
-import Joi from 'joi';
-import { loadEnvFile } from 'process';
-import { RmqModule } from '../../libs/common/rmq/rmq.module';
-import { RabbitMQController } from '../../libs/common/rmq/rmq.controller';
-dotenv.config();
+import { RabbitMQAuthController } from '../controllers/rabbitmq.controller';
+import { RmqModule } from './rabbitmq.module';
+import { AuthModule } from './auth.module';
+
 
 @Module({
-    imports: [
-        RmqModule,
-
-        ConfigModule.forRoot({
-            isGlobal: true, // Make ConfigModule available globally
-            envFilePath: '.env', // Specify the path to the .env file
-           
-          }),
-        // TypeORM configuration for database connection
-        TypeOrmModule.forRoot({
-            type: 'postgres',
-            host: process.env.DB_HOST,
-            port: parseInt(process.env.DB_PORT || '5432', 10),
-            username: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_DATABASE,
-            url: process.env.DATABASE_URL,
-            ssl: {
-              rejectUnauthorized: false, // Use true in production and provide the CA certificate
-            },
-            entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-            synchronize: true,
-        }),
-
-        // Register the User entity with TypeORM
-        TypeOrmModule.forFeature([User]),
-
-        // Passport and JWT configurations
-        PassportModule.register({ defaultStrategy: 'jwt' }),
-        JwtModule.register({
-            secret: process.env.JWT_SECRET, // Use a secure key in production
-            signOptions: { expiresIn: '1h' }, // Token expiry
-        }),
-        
-    ],
-    controllers: [AuthController, MFAController, ProfileController, PasswordController, RabbitMQController], // Controller for routes
-    providers: [
-        ProfileService,
-        PasswordService,
-        MFAService,
-        AuthService, // Auth service to handle business logic
-        JwtAuthGuard, // Guard to protect routes
-        JwtStrategy, // JWT strategy for validating tokens
-    ],
-    exports: [JwtModule, PassportModule], // Export modules if needed in other modules
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('DB_HOST'),
+        port: configService.get('DB_PORT'),
+        username: configService.get('DB_USER'),
+        password: configService.get('DB_PASSWORD'),
+        database: configService.get('DB_DATABASE'),
+        entities: [User],
+        synchronize: true,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    AuthModule,
+    RmqModule,
+  ],
+  controllers: [RabbitMQAuthController],
 })
-export class AppModule { }
+export class AppModule {}

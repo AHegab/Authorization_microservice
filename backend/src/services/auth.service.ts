@@ -14,7 +14,8 @@ import { RabbitMQService } from './rabbitmq.service';
 
 
 @Injectable()
-export class AuthService {
+export class  AuthService {
+  
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -129,8 +130,20 @@ export class AuthService {
 
 
 
+  async validateJwt(token: string) {
+    try {
+      this.jwtService.verify(token);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
 
+  extractUserIdFromToken(token: string) {
+    const decoded: any = this.jwtService.decode(token);
+    return decoded.sub;
+  }
 
 
 
