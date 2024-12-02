@@ -33,7 +33,6 @@ COPY --from=builder /app/node_modules ./node_modules
 # Expose the port your app runs on
 EXPOSE 4000
 
-ENV =value
 
 # Start the application
 CMD ["npm", "run", "start:prod"]
