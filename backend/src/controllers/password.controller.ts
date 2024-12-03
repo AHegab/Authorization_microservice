@@ -1,47 +1,42 @@
-import { Controller, Get, Post, Req, Res, Body, BadRequestException, UnauthorizedException, Patch, NotFoundException, Query } from '@nestjs/common';
-import { User } from '../entities/user.entity';
-import { Request, Response } from 'express';
-import { AuthService } from '../services/auth.service';
-import { Enable2FADto } from '../dtos/enable-2fa.dto';
-import { LoginDto } from '../dtos/login.dto';
-import { CreateUserDto } from '../dtos/create-user.dto';
-import { UpdateUserDto } from '../dtos/update-user.dto';
-import { ForgetPasswordDto } from '../dtos/forget-password.dto';
-import { ResetPasswordDto } from '../dtos/password-reset.dto'; // Ensure this file exists at the specified path
-import { UseGuards } from '@nestjs/common';
-import { Param } from '@nestjs/common';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { Controller, Post, Body, BadRequestException, Query } from '@nestjs/common';
 import { PasswordService } from '../services/password.service';
-
-
-
+import { ForgetPasswordDto } from '../dtos/forget-password.dto';
+import { ResetPasswordDto } from '../dtos/password-reset.dto';
 
 @Controller('password')
 export class PasswordController {
     constructor(private readonly passwordService: PasswordService) { }
 
-
+    /**
+     * Endpoint to request a password reset email.
+     */
     @Post('forget')
-    async forgetPassword(@Body() forgetPasswordDto: ForgetPasswordDto) {
-        const email = forgetPasswordDto.email;
+    async forgetPassword(@Body() forgetPasswordDto: ForgetPasswordDto): Promise<{ message: string }> {
+        const { email } = forgetPasswordDto;
 
         if (!email) {
             throw new BadRequestException('Email is required');
         }
 
+        // Call the service to handle forget password logic
         return await this.passwordService.forgetPassword(email);
     }
 
-
-
+    /**
+     * Endpoint to reset the password using the reset token.
+     */
     @Post('reset')
-    async resetPassword(@Query('token') token: string, @Body() resetPasswordDto: ResetPasswordDto) {
+    async resetPassword(
+        @Query('token') token: string,
+        @Body() resetPasswordDto: ResetPasswordDto,
+    ): Promise<{ message: string }> {
         const { newPassword } = resetPasswordDto;
 
         if (!token || !newPassword) {
             throw new BadRequestException('Token and new password are required');
         }
 
+        // Call the service to handle the password reset logic
         return await this.passwordService.resetPassword(token, newPassword);
     }
 }

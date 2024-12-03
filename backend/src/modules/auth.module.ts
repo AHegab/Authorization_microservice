@@ -10,6 +10,10 @@ import { MFAService } from '../services/mfa.service';
 import { PasswordService } from '../services/password.service';
 import { ProfileService } from '../services/profile.service';
 import { MFAController } from '../controllers/mfa.controller';
+import { EmailService } from '../services/email.service';
+import { PasswordController } from '../controllers/password.controller';
+import { RmqService } from '../services/rmq.service';
+import { ProfileController } from '../controllers/profile.controller';
 
 @Module({
   imports: [
@@ -25,12 +29,14 @@ import { MFAController } from '../controllers/mfa.controller';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController, RabbitMQAuthController, MFAController ],
+  controllers: [AuthController, RabbitMQAuthController, MFAController ,PasswordController,RabbitMQAuthController,ProfileController],
   providers: [
     AuthService,
     MFAService,
     PasswordService,
     ProfileService,
+    EmailService,
+    RmqService
   ],
   exports: [AuthService, JwtModule],
 })

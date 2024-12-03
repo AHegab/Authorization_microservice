@@ -8,6 +8,7 @@ import { RmqModule } from './rabbitmq.module';
 import { AuthModule } from './auth.module';
 
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,3 +37,4 @@ import { AuthModule } from './auth.module';
   controllers: [RabbitMQAuthController],
 })
 export class AppModule {}
+
