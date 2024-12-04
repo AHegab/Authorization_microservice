@@ -10,7 +10,7 @@ async function bootstrap() {
   
   app.useGlobalPipes(new ValidationPipe());
   
-  // app.connectMicroservice(rmqService.getOptions('auth_queue'));
+  app.connectMicroservice(rmqService.getOptions('auth_queue'));
   
   await app.startAllMicroservices();
   await app.listen(3000);
