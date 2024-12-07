@@ -1,14 +1,10 @@
-import { BadRequestException, Injectable, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { calculatePasswordEntropy } from '../utils/password.utils';
-import { Response } from 'express';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcryptjs';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
-import * as qrcode from 'qrcode';
-import * as speakeasy from 'speakeasy';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { calculatePasswordEntropy } from '../utils/password.utils';
 
 
 
@@ -129,6 +125,14 @@ export class  AuthService {
       return false;
     }
   }
+
+  async validateToken(token: string): Promise<any> {
+    try {
+        return this.jwtService.verify(token); // Validate token with JwtService
+    } catch (error) {
+        throw new BadRequestException('Invalid token');
+    }
+}
 
 
   extractUserIdFromToken(token: string) {

@@ -17,7 +17,7 @@ export class RmqService {
                 noAck,
                 persistent: true,
                 queueOptions: {
-                    durable: false,  // Changed to false to match
+                    durable: true,  // Changed to false to match
                 },
             }
         };
