@@ -25,7 +25,7 @@ async function bootstrap() {
     console.log('Connecting to RabbitMQ at:', configService.get('RABBITMQ_URL'));
 
     app.enableCors({
-        origin: ['http://localhost:3000'],
+        origin: '*',
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true,
