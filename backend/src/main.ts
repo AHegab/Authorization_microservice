@@ -31,8 +31,10 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
     // Start HTTP server
-    await app.listen(3070);
-    console.log(`Auth Service is running on port 3000`);
+    const PORT = process.env.PORT || 3000; // Railway assigns a PORT
+    await app.listen(PORT, () => {
+    console.log(`Application running on port ${PORT}`);
+  });
 }
 
 bootstrap();
