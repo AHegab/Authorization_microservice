@@ -81,6 +81,7 @@ export class  AuthService {
     if(user.isTwoFactorEnabled){
       return { success: true, message: '2FA enabled'};
       }
+      
 
     const token = this.generateJwt(user);
 

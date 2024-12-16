@@ -14,6 +14,7 @@ import { EmailService } from '../services/email.service';
 import { PasswordController } from '../controllers/password.controller';
 import { RmqService } from '../services/rmq.service';
 import { ProfileController } from '../controllers/profile.controller';
+import { Repository } from 'typeorm/repository/Repository';
 
 @Module({
   imports: [

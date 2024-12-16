@@ -51,4 +51,25 @@ export class ProfileService {
         return await this.userRepository.save(user);
     }
 
+    async updateBudgets(userId: string, newBudgets: Record<string, number>) {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        // Update budgets
+        user.budgets = newBudgets;
+
+        return await this.userRepository.save(user);
+    }
+
+    async getUserBudgets(userId: string): Promise<Record<string, number>> {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        return user.budgets || {};
+    }
+
 }

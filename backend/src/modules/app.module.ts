@@ -6,11 +6,14 @@ import { User } from '../entities/user.entity';
 import { RabbitMQAuthController } from '../controllers/rabbitmq.controller';
 import { RmqModule } from './rabbitmq.module';
 import { AuthModule } from './auth.module';
+import { profile } from 'console';
+import { ProfileService } from '../services/profile.service';
 
 
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([User]),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -30,6 +33,7 @@ import { AuthModule } from './auth.module';
     AuthModule,
     RmqModule,
   ],
+  providers: [ProfileService],
   controllers: [RabbitMQAuthController],
 })
 export class AppModule {}

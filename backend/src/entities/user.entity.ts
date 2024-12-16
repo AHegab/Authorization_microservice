@@ -59,6 +59,12 @@ export class User {
     @Column({ nullable: true }) // Two-factor authentication secret
     twoFactorSecret?: string;
 
+    @Column({
+        type: 'jsonb', // JSONB type for storing budgets as key-value pairs
+        default: {},
+    })
+    budgets: Record<string, number> = {};
+
     @Column({ default: false }) // Indicates if 2FA is enabled
     isTwoFactorEnabled: boolean;
 

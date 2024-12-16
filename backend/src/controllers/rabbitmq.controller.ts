@@ -2,6 +2,8 @@ import { BadRequestException, Controller, Logger } from '@nestjs/common';
 import { Ctx, MessagePattern, Payload, RmqContext } from '@nestjs/microservices';
 import * as amqp from 'amqplib';
 import { AuthService } from '../services/auth.service';
+// import { Profile } from '@types/passport';
+import { ProfileService } from '../services/profile.service';
 
 @Controller()
 export class RabbitMQAuthController {
@@ -11,7 +13,9 @@ export class RabbitMQAuthController {
         analysis: 'analysis_queue',
     };
 
-    constructor(private readonly authService: AuthService) {}
+    constructor(private readonly authService: AuthService,
+                private readonly profileService: ProfileService,
+    ) {}
 
     @MessagePattern() // Handles messages from auth_queue
     async validateToken(
@@ -32,8 +36,8 @@ export class RabbitMQAuthController {
             this.logger.log(`Auth Service received token: ${data.token}`);
             const isValid = await this.authService.validateJwt(data.token);
             const userId = isValid ? this.authService.extractUserIdFromToken(data.token) : null;
-
-            const response = { isValid, userId };
+            const budgets = (await this.profileService.findById(userId)).budgets;
+            const response = data.flag ?{ isValid, userId }: { isValid, userId, budgets };
             await this.sendResponseToQueue(targetQueue, response, originalMsg);
 
             this.logger.log(`Response sent to queue: ${targetQueue}`, response);

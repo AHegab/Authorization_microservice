@@ -20,21 +20,28 @@ export class ProfileController {
     constructor(private readonly profileService: ProfileService) { }
 
     @UseGuards(JwtAuthGuard)
-    @Get(':id')
-    async getProfile(@Param('id') id: string, @Req() req: any) {
+    @Get('')
+    async getProfile( @Req() req: any) {
       const userIdFromToken = req.user.sub;
-      if (userIdFromToken !== id) {
-        throw new UnauthorizedException('You can only access your own profile');
-      }
+      
   
-      const user = await this.profileService.findById(id);
+      const user = await this.profileService.findById(userIdFromToken);
       if (!user) {
         throw new NotFoundException('User not found');
       }
       return user;
     }
 
+    //patch user budget
+    @UseGuards(JwtAuthGuard)
+    @Patch('budgets')
+    async updateBudgets(@Req() req: Request, @Body() budgets: Record<string, number>) {
+      const userId = (req.user as any).sub;
+      const updatedUser = await this.profileService.updateBudgets(userId, budgets);
+      return { message: 'Budgets updated successfully', user: updatedUser };
+    }
 
+    
 
 
     @UseGuards(JwtAuthGuard)
