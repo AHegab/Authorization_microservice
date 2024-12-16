@@ -10,7 +10,7 @@ async function bootstrap() {
     const rmqService = app.get<RmqService>(RmqService);
 
     // Enable global validation pipes
-    app.useGlobalPipes(new ValidationPipe());
+    // app.useGlobalPipes(new ValidationPipe());
 
     // Connect to RabbitMQ microservice for "auth_service_queue"
     app.connectMicroservice(rmqService.getOptions('auth_queue'));
@@ -31,7 +31,7 @@ async function bootstrap() {
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
     // Start HTTP server
-    await app.listen(3000);
+    await app.listen(3070);
     console.log(`Auth Service is running on port 3000`);
 }
 
