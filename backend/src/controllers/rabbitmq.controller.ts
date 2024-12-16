@@ -10,13 +10,19 @@ export class RabbitMQAuthController {
     constructor(private readonly authService: AuthService) {}
 
     @MessagePattern() // Handles messages from auth_queue
-    async validateToken(@Payload() data: { token: string }, @Ctx() context: RmqContext) {
+    async validateToken(
+        @Payload() data: { token: string; replyTo: string },
+        @Ctx() context: RmqContext,
+    ) {
         const channel = context.getChannelRef();
         const originalMsg = context.getMessage();
-        const transactionsQueue = 'transactions_queue';
 
         if (!data.token) {
             throw new BadRequestException('Token is required');
+        }
+
+        if (!data.replyTo) {
+            throw new BadRequestException('replyTo queue is required');
         }
 
         try {
@@ -26,21 +32,33 @@ export class RabbitMQAuthController {
 
             console.log(`Validation result: isValid=${isValid}, userId=${userId}`);
 
+            // Construct response
             const response = { isValid, userId };
+
+            // Publish response to the specified replyTo queue
             const connection = await amqp.connect(process.env.RABBITMQ_URL);
             const responseChannel = await connection.createChannel();
-            await responseChannel.assertQueue(transactionsQueue, { durable: true });
+            await responseChannel.assertQueue(data.replyTo, { durable: true });
+
             responseChannel.sendToQueue(
-                transactionsQueue,
+                data.replyTo, // Queue to send the response back to
                 Buffer.from(JSON.stringify(response)),
-                { correlationId: originalMsg.properties.correlationId } // Attach correlationId
+                {
+                    correlationId: originalMsg.properties.correlationId, // Correlate request and response
+                    contentType: 'application/json',
+                },
             );
 
-            this.logger.log(`Response sent to queue: ${transactionsQueue}`, response);
+            this.logger.log(`Response sent to queue: ${data.replyTo}`, response);
+
+            // Acknowledge the original message
             channel.ack(originalMsg);
         } catch (err) {
             this.logger.error(`Error validating token: ${err.message}`);
             channel.nack(originalMsg);
         }
     }
+
+
+    
 }
