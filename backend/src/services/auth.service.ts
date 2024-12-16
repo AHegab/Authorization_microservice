@@ -78,18 +78,16 @@ export class  AuthService {
       return { success: false, message: 'Invalid email or password' };
     }
 
+    if(user.isTwoFactorEnabled){
+      return { success: true, message: '2FA enabled'};
+      }
+
     const token = this.generateJwt(user);
 
     return {
       success: true,
       message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      },
-      token, // Include the JWT token in the response
+      token:token , // Include the JWT token in the response
     };
   }
 

@@ -35,7 +35,7 @@ export class MFAService {
     }
     
 
-    async verify2FA(userId: string, otp: string): Promise<boolean> {
+    async verify2FA(userId: string, otp: string): Promise<string> {
         const user = await this.userRepository.findOne({ where: { id: userId } });
         if (!user || !user.twoFactorSecret) {
             throw new UnauthorizedException('2FA is not enabled');
@@ -48,7 +48,13 @@ export class MFAService {
         });
     
         console.log({ secret: user.twoFactorSecret, otp, isValid });
-        return isValid;
+
+        if(isValid)
+        {
+            const token= this.jwtService.sign({id:userId});
+            return token;
+        }
+        return null;
     }
 
         async validateToken(token: string): Promise<any> {
