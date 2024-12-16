@@ -10,19 +10,14 @@ export class RabbitMQAuthController {
     constructor(private readonly authService: AuthService) {}
 
     @MessagePattern() // Handles messages from auth_queue
-    async validateToken(
-        @Payload() data: { token: string; replyTo: string },
-        @Ctx() context: RmqContext,
-    ) {
+    async validateToken(@Payload() data: { token: string, flag:boolean }, @Ctx() context: RmqContext) {
         const channel = context.getChannelRef();
         const originalMsg = context.getMessage();
+        const transactionsQueue = 'transactions_queue';
+        const analysisQueue = 'analysis_queue';
 
         if (!data.token) {
             throw new BadRequestException('Token is required');
-        }
-
-        if (!data.replyTo) {
-            throw new BadRequestException('replyTo queue is required');
         }
 
         try {
@@ -32,27 +27,35 @@ export class RabbitMQAuthController {
 
             console.log(`Validation result: isValid=${isValid}, userId=${userId}`);
 
-            // Construct response
             const response = { isValid, userId };
-
-            // Publish response to the specified replyTo queue
             const connection = await amqp.connect(process.env.RABBITMQ_URL);
             const responseChannel = await connection.createChannel();
-            await responseChannel.assertQueue(data.replyTo, { durable: true });
+            if(data.flag){
 
+                await responseChannel.assertQueue(transactionsQueue, { durable: true });
             responseChannel.sendToQueue(
-                data.replyTo, // Queue to send the response back to
+                transactionsQueue,
                 Buffer.from(JSON.stringify(response)),
-                {
-                    correlationId: originalMsg.properties.correlationId, // Correlate request and response
-                    contentType: 'application/json',
-                },
+                { correlationId: originalMsg.properties.correlationId } // Attach correlationId
+            );
+            this.logger.log(`Response sent to queue: ${transactionsQueue}`, response);
+            channel.ack(originalMsg);
+            }
+            if(!data.flag){
+                await responseChannel.assertQueue(analysisQueue, { durable: true });
+            responseChannel.sendToQueue(
+                analysisQueue,
+                Buffer.from(JSON.stringify(response)),
+                { correlationId: originalMsg.properties.correlationId } // Attach correlationId
+
+                
             );
 
-            this.logger.log(`Response sent to queue: ${data.replyTo}`, response);
-
-            // Acknowledge the original message
+            this.logger.log(`Response sent to queue: ${analysisQueue}`, response);
             channel.ack(originalMsg);
+            }
+
+        
         } catch (err) {
             this.logger.error(`Error validating token: ${err.message}`);
             channel.nack(originalMsg);
