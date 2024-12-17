@@ -45,19 +45,16 @@ export class ProfileController {
 
 
     @UseGuards(JwtAuthGuard)
-    @Patch('update/:id')
+    @Patch('update')
     async updateUser(
-      @Param('id') id: string,
+      
       @Body() updateUserDto: UpdateUserDto,
       @Req() req: Request,
     ) {
       const userIdFromToken = (req.user as any)?.sub; // Extract user ID from JWT payload
 
-      if (userIdFromToken !== id) {
-        throw new NotFoundException('You can only update your own profile');
-      }
-  
-      const updatedUser = await this.profileService.update(id, updateUserDto);
+      
+      const updatedUser = await this.profileService.update(userIdFromToken, updateUserDto);
       return { message: 'User updated successfully', user: updatedUser };
     }
 
