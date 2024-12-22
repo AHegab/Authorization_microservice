@@ -45,37 +45,36 @@ export class PasswordService {
    * Handle password reset logic: validate token and update the password.
    */
   async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const entropy = calculatePasswordEntropy(newPassword);
+    if (entropy < 60) {
+      console.log('Password too weak, throwing error...');
+      throw new BadRequestException(
+        'Password is too weak. Use a more complex password with a mix of letters, numbers, and symbols.',
+      );
+    }
+  
     try {
-      // Verify and decode the token
       const payload = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
       const user = await this.userRepository.findOne({ where: { id: payload.sub } });
-
-      // Check if the user exists
+  
       if (!user) {
         throw new UnauthorizedException('Invalid or expired token');
       }
-
-      // Validate password strength
-      const entropy = calculatePasswordEntropy(newPassword);
-      if (entropy < 60) {
-        throw new BadRequestException(
-          'Password is too weak. Use a more complex password with a mix of letters, numbers, and symbols.',
-        );
-      }
-
-      // Hash the new password
+  
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       user.hashedPassword = hashedPassword;
-
-      // Save the updated user to the database
+  
       await this.userRepository.save(user);
-
+  
       return { message: 'Password reset successfully' };
     } catch (error) {
+      console.error('Error occurred during reset password:', error);
+  
       if (error.name === 'TokenExpiredError') {
         throw new UnauthorizedException('Reset token has expired. Please request a new one.');
       }
+  
       throw new BadRequestException('Invalid or expired token');
     }
-  }
+  }  
 }
