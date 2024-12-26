@@ -35,7 +35,7 @@ export class PasswordService {
     );
 
     // Send the reset email
-    const resetLink = `${process.env.FRONTEND_URL}/passwords/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/password/reset-password?token=${resetToken}`;
     await this.emailService.sendPasswordResetEmail(user.email, resetLink);
 
     return { message: 'Password reset link has been sent to your email' };
