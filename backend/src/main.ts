@@ -25,7 +25,7 @@ async function bootstrap() {
     console.log('Connecting to RabbitMQ at:', configService.get('RABBITMQ_URL'));
 
     app.enableCors({
-        origin: 'http://localhost:3000', // Allow only the frontend origin
+        origin: 'https://personalfinancetracker-production-f962.up.railway.app', // Allow only the frontend origin
         credentials: true, // Allow credentials (cookies, headers, etc.)
       });
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
